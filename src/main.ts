@@ -8,6 +8,7 @@ import '../node_modules/bootstrap/js/dist/collapse.js';
 import routing from './routing';
 
 export default async function (element: HTMLElement) {
+  console.log('Function is called v2');
   const patch = init([attributesModule, eventListenersModule, classModule]);
 
   const ctrl = new Ctrl(redraw);

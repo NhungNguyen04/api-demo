@@ -4,6 +4,8 @@ import { Ctrl } from '../ctrl';
 import { Game, Renderer } from '../interfaces';
 import OngoingGames from '../ongoingGames';
 import { href } from '../routing';
+import { io } from 'socket.io-client';
+
 
 export const renderHome: Renderer = ctrl => (ctrl.auth.me ? userHome(ctrl) : anonHome());
 
@@ -34,14 +36,41 @@ const userHome = (ctrl: Ctrl) => [
         },
         'Play a rated 10+0 game with a random opponent'
       ),
+      // New button to connect to Socket.IO
+      h(
+        'button.btn.btn-outline-success.btn-lg',
+        {
+          attrs: { type: 'button' },
+          on: {
+            click: () => {
+              const socket = io('http://169.254.117.80:5000'); // Replace with the correct server address
+
+              socket.on('connect', () => {
+                console.log('Connected to Socket.IO server');
+              });
+
+              socket.on('disconnect', () => {
+                console.log('Disconnected from Socket.IO server');
+              });
+
+              socket.on('connect_error', (error: Error) => {
+                console.error('Connection error:', error.message);
+              });
+
+              // Example of handling a custom event
+                socket.on('some_event', (data: any) => {
+                console.log('Received some_event:', data);
+                });
+            },
+          },
+        },
+        'Connect to Socket.IO'
+      ),
     ]),
     h('h2.mt-5', 'Games in progress'),
     h('div.games', renderGames(ctrl.games)),
-    h('h2.mt-5.mb-3', 'About'),
-    renderAbout(),
   ]),
 ];
-
 const renderGames = (ongoing: OngoingGames) =>
   ongoing.games.length ? ongoing.games.map(renderGameWidget) : [h('p', 'No ongoing games at the moment')];
 
@@ -81,7 +110,6 @@ const renderGameWidget = (game: Game) =>
 
 const anonHome = () => [
   h('div.login.text-center', [
-    renderAbout(),
     h('div.big', [h('p', 'Please log in to continue.')]),
     h(
       'a.btn.btn-primary.btn-lg.mt-5',
@@ -92,47 +120,3 @@ const anonHome = () => [
     ),
   ]),
 ];
-
-const renderAbout = () =>
-  h('div.about', [
-    h('p', 'This is an example for a fully client side OAuth app that uses various Lichess APIs.'),
-    h('ul', [
-      h(
-        'li',
-        h(
-          'a',
-          {
-            attrs: { href: 'https://github.com/lichess-org/api-demo' },
-          },
-          'Source code of this demo'
-        )
-      ),
-      h(
-        'li',
-        h(
-          'a',
-          {
-            attrs: { href: 'https://github.com/lichess-org/api-demo#lichess-oauth-app-demo' },
-          },
-          'README'
-        )
-      ),
-      h(
-        'li',
-        h(
-          'a',
-          {
-            attrs: { href: 'https://lichess.org/api' },
-          },
-          'Lichess.org API documentation'
-        )
-      ),
-    ]),
-    h('p', [
-      'Press ',
-      h('code', '<Ctrl+Shift+j>'),
-      ' to open your browser console and view incoming events.',
-      h('br'),
-      'Check out the network tab as well to view API calls.',
-    ]),
-  ]);
